@@ -1,0 +1,35 @@
+spring:
+  main:
+    web-application-type: none
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            clientId: clienId
+            clientSecret: clientSecret
+
+
+github:
+  user: user
+  pwd: pwd
+
+appconfig:
+  clonebasepath: D:\DatasetIRMined\
+  cloverdbdir: /target/clover/clover.db
+  cloverMergedbdir: /target/clover/cloverMerge.db
+  surefirereportdir: /target/surefire-reports
+  timeoutMins: 10
+  requireAllTestOnPrev: false
+  pluginstoremove:
+    - maven-javadoc-plugin
+    - maven-pmd-plugin
+    - maven-checkstyle-plugin
+    - dependency-scope-maven-plugin
+
+asyncconfig:
+  corePoolSize: 4
+  maxPoolSize: 8
+  queueCapacity: 5000
+
+travisKey: testkey
