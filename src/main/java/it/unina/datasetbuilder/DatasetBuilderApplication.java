@@ -3,6 +3,7 @@ package it.unina.datasetbuilder;
 import it.unina.datasetbuilder.dto.JobInformationDTO;
 import it.unina.datasetbuilder.processor.IJobsProcessor;
 import it.unina.datasetbuilder.readers.strategies.ReaderStrategyExecutor;
+import it.unina.datasetbuilder.utilities.ReportWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,12 @@ public class DatasetBuilderApplication implements CommandLineRunner {
 			String sourcePath= args[1];
 			LOGGER.info("Start Execution with strategy: {}", readerStrategy);
 			List<JobInformationDTO> jobInformationDTOS = readerStrategyExecutor.executeStrategy(readerStrategy,sourcePath);
-			jobsProcessor.process(jobInformationDTOS);
+			//jobsProcessor.process(jobInformationDTOS);
+
+
+			ReportWriter reportWriter = new ReportWriter();
+			reportWriter.writeReports(jobInformationDTOS);
+
 		}else{
 			throw new IllegalArgumentException("Please insert dataset type and source path to processing");
 		}

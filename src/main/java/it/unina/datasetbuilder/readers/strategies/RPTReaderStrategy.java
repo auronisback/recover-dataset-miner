@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -23,7 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-@Qualifier("RPT")
+@Qualifier("RTP")
 public class RPTReaderStrategy implements DatasetReaderStrategy {
 
     @Autowired
@@ -56,21 +58,33 @@ public class RPTReaderStrategy implements DatasetReaderStrategy {
     }
 
     private void decorateInfos(JobInformationDTO job){
-        JobsDTO jobResponse = traviCIApiInvoker.getJob(job.getJobId());
-        String projectName = job.getSlugName();
-        BuildsDTO buildsById = traviCIApiInvoker.getBuildsById(projectName, jobResponse.getJob().getBuildID());
-        BuildsDTO buildsAfterNumber = traviCIApiInvoker.getBuildsAfterNumber(projectName, buildsById.getBuilds()
+        try {
+            JobsDTO jobResponse = traviCIApiInvoker.getJob(job.getJobId());
+            String projectName = job.getSlugName();
+            BuildsDTO buildsById = traviCIApiInvoker.getBuildsById(projectName, jobResponse.getJob().getBuildID());
+            if(buildsById.getBuilds().size() == 0) {
+                LOGGER.warn("No builds obtained for " + job.getSlugName() + " " + job.getJobId());
+                return;
+            }
+            BuildsDTO buildsAfterNumber = traviCIApiInvoker.getBuildsAfterNumber(projectName, buildsById.getBuilds()
                 .get(0).getNumber());
-        BuildDTO prevBuildDTO = buildsAfterNumber.getBuilds().stream().filter(build -> "passed".equals(build.getState())).findFirst().orElse(null);
-        JobsDTO prevJob = traviCIApiInvoker.getJob(prevBuildDTO.getJobIds().get(0));
-        job.setCommmit(jobResponse.getCommit().getSha());
-        job.setBuildID(jobResponse.getJob().getBuildID());
-        JobInformationDTO previousJobInfo = new JobInformationDTO();
-        previousJobInfo.setJobId(prevJob.getJob().getId());
-        previousJobInfo.setBuildID(prevJob.getJob().getBuildID());
-        previousJobInfo.setCommmit(prevJob.getCommit().getSha());
-        job.setPreviousJobInfo(previousJobInfo);
-        job.setSlugName(job.getSlugName());
+            BuildDTO prevBuildDTO = buildsAfterNumber.getBuilds().stream().filter(build -> "passed".equals(build.getState())).findFirst().orElse(null);
+            if(prevBuildDTO == null) {
+                LOGGER.warn("Previous build not found for " + job.getSlugName() + " " + job.getJobId());
+                return;
+            }
+            JobsDTO prevJob = traviCIApiInvoker.getJob(prevBuildDTO.getJobIds().get(0));
+            job.setCommmit(jobResponse.getCommit().getSha());
+            job.setBuildID(jobResponse.getJob().getBuildID());
+            JobInformationDTO previousJobInfo = new JobInformationDTO();
+            previousJobInfo.setJobId(prevJob.getJob().getId());
+            previousJobInfo.setBuildID(prevJob.getJob().getBuildID());
+            previousJobInfo.setCommmit(prevJob.getCommit().getSha());
+            job.setPreviousJobInfo(previousJobInfo);
+            job.setSlugName(job.getSlugName());
+        } catch (HttpClientErrorException | HttpServerErrorException ex) {
+            LOGGER.warn(job.getSlugName() + "/" + job.getJobId() + " in error: " + ex.getMessage());
+        }
     }
 
     private List<JobInformationDTO> findAndProcessOffendersCSV(String basePath){

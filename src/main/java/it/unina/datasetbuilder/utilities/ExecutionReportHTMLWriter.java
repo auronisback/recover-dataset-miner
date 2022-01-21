@@ -8,7 +8,9 @@ import it.unina.datasetbuilder.dto.JobInformationDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,17 +22,30 @@ public class ExecutionReportHTMLWriter implements IExecutionReportWriter{
 
     public ExecutionReportHTMLWriter(String path) {
         this.htmlFilePath = path;
+        Head head=new Head();
+        String headString = HTMLConstants.HTML_START_TAG + head.appendText(HTMLConstants.HEAD_CONTENT).write() + HTMLConstants.HTML_BODY_OPEN;
         if (Files.notExists(Paths.get(htmlFilePath))) {
             try {
                 FilesUtility.createFile(htmlFilePath);
-                Head head=new Head();
-                String headString = HTMLConstants.HTML_START_TAG + head.appendText(HTMLConstants.HEAD_CONTENT).write() + HTMLConstants.HTML_BODY_OPEN;
                 Files.write(
                         Paths.get(htmlFilePath),
                         headString.getBytes(StandardCharsets.UTF_8),
                         StandardOpenOption.APPEND);
             } catch (IOException ex) {
                 LOGGER.error("Error in file {} creation",htmlFilePath);
+            }
+        }
+        else {
+            try {
+                new PrintWriter(htmlFilePath).close();
+                Files.write(
+                        Paths.get(htmlFilePath),
+                        headString.getBytes(StandardCharsets.UTF_8),
+                        StandardOpenOption.APPEND);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

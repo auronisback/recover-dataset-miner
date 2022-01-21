@@ -3,7 +3,9 @@ package it.unina.datasetbuilder.utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -28,6 +30,19 @@ public class CSVWriter {
                         StandardOpenOption.APPEND);
             } catch (IOException ex) {
                 LOGGER.error("Error in file {} creation",csvFilePath);
+            }
+        }
+        else {
+            try {
+                new PrintWriter(csvFilePath).close();
+                Files.write(
+                        Paths.get(csvFilePath),
+                        convertToCSV(header).getBytes(),
+                        StandardOpenOption.APPEND);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

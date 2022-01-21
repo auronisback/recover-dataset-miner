@@ -55,6 +55,7 @@ public class MultiThreadProcessorImpl implements MultiThreadProcessor {
             FilesUtility.createFile(jobPath +"/"+ job.getPreviousJobInfo().getCommmit()+"_previous.txt");
             //START CLONING PHASE
             LOGGER.info("GET CLONEURL of slugname: {} job: {}",slugName,job.getJobId());
+
             String cloneUrl=getCloneUrl(cloneLinkMap, job.getSlugName());
             try {
                 LOGGER.info("START CLONE of current slugname: {} job: {} commit: {}",slugName,job.getJobId(),job.getCommmit());
@@ -220,7 +221,9 @@ public class MultiThreadProcessorImpl implements MultiThreadProcessor {
                 FilesUtility.createFile(targetFolder+"/"+"done.txt");
             }
         }else{
-            LOGGER.info("Job {} already processed",slugName+"@"+job.getJobId());
+            LOGGER.info("Job {} already processed",slugName + "@" + job.getJobId()
+                + (job.getStatus() == JobStatusEnum.ALREADY_PROCESSED_ERROR ? " in ERROR" :
+                   job.getStatus() == JobStatusEnum.ALREADY_PROCESSED_SUCCESS ? " in SUCCESS" : " in FAILURE" ));
         }
         LOGGER.info("Job correctly processed:{}",job.getJobId());
         //WRITE results in report
@@ -265,35 +268,46 @@ public class MultiThreadProcessorImpl implements MultiThreadProcessor {
 
     private String getCloneUrl(Map<String, String> cloneLinkMap, String slugName) {
         if(!cloneLinkMap.containsKey(slugName)){
-            try {
-                LOGGER.info("calling git hub for: {}",slugName);
-                RepositoryDTO repositoryDTO = gitHubApiInvoker.getRepoBySlugName(slugName);
-                cloneLinkMap.put(slugName,repositoryDTO.getCloneUrl());
-            }catch(GitHubRateLimitException e) {
-                LOGGER.error("Call to Git hub API, Rate limit excedeed, skip other slugName");
-            }
+//            try {
+//                LOGGER.info("calling git hub for: {}",slugName);
+//                RepositoryDTO repositoryDTO = gitHubApiInvoker.getRepoBySlugName(slugName);
+                // Skipping the invocation to GitHub APIs
+                String [] tokens = slugName.split("/");
+                RepositoryDTO repositoryDTO = new RepositoryDTO();
+                System.out.println(slugName);
+                if(tokens.length == 2) {
+                    repositoryDTO.setName(tokens[1]);
+                    repositoryDTO.setFullName(slugName);
+                    repositoryDTO.setCloneUrl("https://github.com/" + tokens[0] + "/" + tokens[1] + ".git");
+                    LOGGER.info("Creating clone URL skipping GitHub API: " + repositoryDTO.getCloneUrl());
+                    cloneLinkMap.put(slugName, repositoryDTO.getCloneUrl());
+                } else {
+                    LOGGER.error("Invalid slugname: " + slugName);
+                }
+//            }catch(GitHubRateLimitException e) {
+//                LOGGER.error("Call to Git hub API, Rate limit excedeed, skip other slugName");
+//            }
         }
         return cloneLinkMap.get(slugName);
     }
 
     private boolean isJobAlreadyProcessed(JobInformationDTO job){
-        Path successPath = Paths.get(appConfig.getClonebasepath() + job.getSlugName()+"/"+ProcessResultEnum.SUCCESS+"/"+job.getJobId()+"/"+"done.txt");
-        Path failurePath = Paths.get(appConfig.getClonebasepath() + job.getSlugName()+"/"+ProcessResultEnum.FAILURE+"/"+job.getJobId()+"/"+"done.txt");
-        Path errorPath = Paths.get(appConfig.getClonebasepath() + job.getSlugName()+"/"+ProcessResultEnum.ERROR+"/"+job.getJobId()+"/"+"done.txt");
+        String slugName = job.getSlugName().replace("/", "@");
+        Path successPath = Paths.get(appConfig.getClonebasepath() + slugName +"/"+ProcessResultEnum.SUCCESS+"/"+job.getJobId()+"/"+"done.txt");
+        Path failurePath = Paths.get(appConfig.getClonebasepath() + slugName +"/"+ProcessResultEnum.FAILURE+"/"+job.getJobId()+"/"+"done.txt");
+        Path errorPath = Paths.get(appConfig.getClonebasepath() + slugName +"/"+ProcessResultEnum.ERROR+"/"+job.getJobId()+"/"+"done.txt");
+
 
         if(Files.exists(successPath)){
             job.setStatus(JobStatusEnum.ALREADY_PROCESSED_SUCCESS);
-            System.out.println("si1");
             return true;
         }
         else if(Files.exists(failurePath)){
             job.setStatus(JobStatusEnum.ALREADY_PROCESSED_FAILURE);
-            System.out.println("si2");
             return true;
         }
         else if(Files.exists(errorPath)){
             job.setStatus(JobStatusEnum.ALREADY_PROCESSED_ERROR);
-            System.out.println("si3");
             return true;
         }
         return false;

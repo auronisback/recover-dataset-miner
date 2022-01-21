@@ -32,7 +32,7 @@ public class JobsProcessor implements IJobsProcessor {
             CompletableFuture<?>[] completableFutures=new CompletableFuture[jobs.size()];
             IExecutionReportWriter csvReportWriter= new ExecutionReportCSVWriter(appConfig.getClonebasepath() + "report.csv");
             IExecutionReportWriter htmlReportWriter= new ExecutionReportHTMLWriter(appConfig.getClonebasepath() + "reportHTML.html");
-            for (int i=0;i<jobs.size();i++){
+            for (int i=0, jobSize = jobs.size();i<jobSize;i++){
                 CompletableFuture<Void> voidCompletableFuture = multiThreadProcessor.processSingleJob(cloneLinkMap, jobs.get(i),csvReportWriter,htmlReportWriter);
                 completableFutures[i]=voidCompletableFuture;
             }

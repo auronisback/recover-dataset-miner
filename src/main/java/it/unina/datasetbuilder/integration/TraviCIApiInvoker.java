@@ -3,6 +3,9 @@ package it.unina.datasetbuilder.integration;
 import it.unina.datasetbuilder.dto.BuildDTO;
 import it.unina.datasetbuilder.dto.BuildsDTO;
 import it.unina.datasetbuilder.dto.JobsDTO;
+import it.unina.datasetbuilder.readers.strategies.RPTReaderStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +17,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class TraviCIApiInvoker {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TraviCIApiInvoker.class);
+
     @Value("${travisKey}")
     private String travisCIKey;
     /*        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(TmdbUrlContants.SEARCH_MOVIE_URL)
@@ -27,7 +32,7 @@ restTemplate.getForEntity(builder.build().toUri(), MovieListResponse.class).getB
         String getJobById = TravicCIEndpoints.GET_JOB;
         String urlBuilt = getJobById.replace("{jobId}", jobId);
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(urlBuilt);
-        HttpEntity<String> request = new HttpEntity<String>(getHeaders());
+        HttpEntity<String> request = new HttpEntity<>(getHeaders());
         ResponseEntity<JobsDTO> response = restTemplate.exchange(builder.build().toUri(), HttpMethod.GET, request, JobsDTO.class);
         return response.getBody();
     }
@@ -38,7 +43,7 @@ restTemplate.getForEntity(builder.build().toUri(), MovieListResponse.class).getB
         String urlBuilt = getJobById.replace("{slugName}", slugName);
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(urlBuilt);
         builder.queryParam("ids",ids);
-        HttpEntity<String> request = new HttpEntity<String>(getHeaders());
+        HttpEntity<String> request = new HttpEntity<>(getHeaders());
         return restTemplate.exchange(builder.build().toUri(), HttpMethod.GET, request, BuildsDTO.class).getBody();
     }
 
