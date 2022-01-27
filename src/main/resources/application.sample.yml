@@ -15,7 +15,7 @@ github:
   pwd: pwd
 
 appconfig:
-  clonebasepath: D:\DatasetIRMined\
+  clonebasepath: /path/where/to/store/repo
   cloverdbdir: /target/clover/clover.db
   cloverMergedbdir: /target/clover/cloverMerge.db
   surefirereportdir: /target/surefire-reports
@@ -32,4 +32,4 @@ asyncconfig:
   maxPoolSize: 8
   queueCapacity: 5000
 
-travisKey: M88Z5WlK70YfBvkEGtEX9Q
+travisKey: travis_private_key

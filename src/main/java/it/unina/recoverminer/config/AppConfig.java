@@ -16,6 +16,7 @@ public class AppConfig {
     private String surefirereportdir;
     private long timeoutMins;
     private Boolean requireAllTestOnPrev;
+    private String sqlitelocation;
 
     public String getSurefirereportdir() {
         return surefirereportdir;
@@ -71,5 +72,13 @@ public class AppConfig {
 
     public void setRequireAllTestOnPrev(Boolean requireAllTestOnPrev) {
         this.requireAllTestOnPrev = requireAllTestOnPrev;
+    }
+
+    public String getSqlitelocation() {
+        return sqlitelocation;
+    }
+
+    public void setSqlitelocation(String sqliteLocation) {
+        this.sqlitelocation = sqlitelocation;
     }
 }

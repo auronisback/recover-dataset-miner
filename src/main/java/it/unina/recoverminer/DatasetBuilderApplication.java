@@ -3,6 +3,7 @@ package it.unina.recoverminer;
 import it.unina.recoverminer.dto.JobInformationDTO;
 import it.unina.recoverminer.processor.IJobsProcessor;
 import it.unina.recoverminer.readers.strategies.ReaderStrategyExecutor;
+import it.unina.recoverminer.sqlite.recover.SQLiteDatabaseCreator;
 import it.unina.recoverminer.utilities.ReportWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,8 @@ public class DatasetBuilderApplication implements CommandLineRunner {
 	IJobsProcessor jobsProcessor;
 	@Autowired
 	ReportWriter reportWriter;
+	@Autowired
+	SQLiteDatabaseCreator dbCreator;
 
 	public static void main(String[] args) {
 		SpringApplication.run(DatasetBuilderApplication.class, args).close();
@@ -45,8 +49,10 @@ public class DatasetBuilderApplication implements CommandLineRunner {
 			jobs.addAll(irJobs);
 			jobs.addAll(rtpJobs);
 			jobsProcessor.process(jobs);
+			dbCreator.createSchema();
+			dbCreator.loadDataFromRecoverRoot();
+			dbCreator.close();
 			reportWriter.writeReports(jobs);
-
 		}else{
 			throw new IllegalArgumentException("Missing required arguments: <ir_projectinfo_path> <rtp_package_folder>");
 		}
